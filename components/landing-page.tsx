@@ -82,10 +82,18 @@ export function LandingPage() {
       }
     }
     
-    // Default: January 1st of next year at 00:00:00
+    // Default: January 10th of next year at 00:00:00
     const now = new Date()
-    const nextYear = now.getFullYear() + 1
-    return new Date(nextYear, 0, 1, 0, 0, 0, 0) // January 1st, next year
+    const currentYear = now.getFullYear()
+    const currentMonth = now.getMonth()
+    
+    // If we're past January 10th this year, set for next year
+    let targetYear = currentYear
+    if (currentMonth > 0 || (currentMonth === 0 && now.getDate() > 10)) {
+      targetYear = currentYear + 1
+    }
+    
+    return new Date(targetYear, 0, 10, 0, 0, 0, 0) // January 10th
   })
 
   // Save the target date on component mount
@@ -95,6 +103,15 @@ export function LandingPage() {
       localStorage.setItem('countdown_start', new Date().getTime().toString())
     }
   }, [targetDate])
+
+  // Format date for display
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('en-US', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric'
+    })
+  }
 
   return (
     <div className="min-h-screen flex flex-col transition-all duration-500 relative overflow-hidden bg-background">
@@ -120,8 +137,7 @@ export function LandingPage() {
               The future of <span className="relative inline-block text-foreground">blockchain research</span>
             </h1>
             <p className="text-base sm:text-lg md:text-xl max-w-2xl mx-auto text-pretty leading-relaxed px-2 sm:px-0 text-muted-foreground">
-              Pioneering advanced research in blockchain technology, cryptography, and distributed systems. Building the
-              foundation for tomorrow's decentralized infrastructure.
+              An independent innovation lab advancing applied research and decentralized systems. Building frameworks, tools, and protocols for the future of open innovations
             </p>
           </div>
 
@@ -131,7 +147,7 @@ export function LandingPage() {
             </p>
             <CountdownTimer targetDate={targetDate} />
             <p className="text-xs text-muted-foreground mt-2">
-              Launching on: January 1st, {targetDate.getFullYear()}
+              Launching on: {formatDate(targetDate)}
             </p>
           </div>
 
@@ -146,7 +162,7 @@ export function LandingPage() {
             </div>
             <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-muted-foreground">
               <Lock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              <span>Zero-Knowledge Proofs</span>
+              <span>Zero-Knowledge Protocol</span>
             </div>
           </div>
 
