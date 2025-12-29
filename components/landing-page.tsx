@@ -19,12 +19,20 @@ function CountdownTimer({ targetDate }: { targetDate: Date }) {
       const difference = target - now
 
       if (difference > 0) {
-        setTimeLeft({
+        const newTimeLeft = {
           days: Math.floor(difference / (1000 * 60 * 60 * 24)),
           hours: Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
           minutes: Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)),
           seconds: Math.floor((difference % (1000 * 60)) / 1000),
-        })
+        }
+        
+        setTimeLeft(newTimeLeft)
+        // Save current timestamp to localStorage
+        localStorage.setItem('countdown_start', now.toString())
+        localStorage.setItem('countdown_target', target.toString())
+      } else {
+        // Timer has ended
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 })
       }
     }
 
@@ -54,11 +62,39 @@ function CountdownTimer({ targetDate }: { targetDate: Date }) {
 }
 
 export function LandingPage() {
-  const [targetDate] = useState<Date>(() => {
-    const date = new Date()
-    date.setMonth(date.getMonth() + 2)
-    return date
+  const [targetDate, setTargetDate] = useState<Date>(() => {
+    // Try to load saved target date from localStorage first
+    if (typeof window !== 'undefined') {
+      const savedTarget = localStorage.getItem('countdown_target')
+      const savedStart = localStorage.getItem('countdown_start')
+      
+      if (savedTarget && savedStart) {
+        const savedTargetTime = parseInt(savedTarget)
+        const savedStartTime = parseInt(savedStart)
+        const now = new Date().getTime()
+        
+        // Calculate elapsed time since last saved
+        const elapsed = now - savedStartTime
+        const originalDifference = savedTargetTime - savedStartTime
+        const newTargetTime = now + (originalDifference - elapsed)
+        
+        return new Date(newTargetTime)
+      }
+    }
+    
+    // Default: January 1st of next year at 00:00:00
+    const now = new Date()
+    const nextYear = now.getFullYear() + 1
+    return new Date(nextYear, 0, 1, 0, 0, 0, 0) // January 1st, next year
   })
+
+  // Save the target date on component mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('countdown_target', targetDate.getTime().toString())
+      localStorage.setItem('countdown_start', new Date().getTime().toString())
+    }
+  }, [targetDate])
 
   return (
     <div className="min-h-screen flex flex-col transition-all duration-500 relative overflow-hidden bg-background">
@@ -94,6 +130,9 @@ export function LandingPage() {
               Organization launching in
             </p>
             <CountdownTimer targetDate={targetDate} />
+            <p className="text-xs text-muted-foreground mt-2">
+              Launching on: January 1st, {targetDate.getFullYear()}
+            </p>
           </div>
 
           <div className="flex items-center justify-center gap-4 sm:gap-6 md:gap-10 flex-wrap pt-4">
