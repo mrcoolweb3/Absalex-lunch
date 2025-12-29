@@ -25,7 +25,7 @@ function CountdownTimer({ targetDate }: { targetDate: Date }) {
           minutes: Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)),
           seconds: Math.floor((difference % (1000 * 60)) / 1000),
         }
-        
+
         setTimeLeft(newTimeLeft)
         // Save current timestamp to localStorage
         localStorage.setItem('countdown_start', now.toString())
@@ -63,37 +63,35 @@ function CountdownTimer({ targetDate }: { targetDate: Date }) {
 
 export function LandingPage() {
   const [targetDate, setTargetDate] = useState<Date>(() => {
-    // Try to load saved target date from localStorage first
+    // FIRST: Clear localStorage to reset any old dates
     if (typeof window !== 'undefined') {
-      const savedTarget = localStorage.getItem('countdown_target')
-      const savedStart = localStorage.getItem('countdown_start')
-      
-      if (savedTarget && savedStart) {
-        const savedTargetTime = parseInt(savedTarget)
-        const savedStartTime = parseInt(savedStart)
-        const now = new Date().getTime()
-        
-        // Calculate elapsed time since last saved
-        const elapsed = now - savedStartTime
-        const originalDifference = savedTargetTime - savedStartTime
-        const newTargetTime = now + (originalDifference - elapsed)
-        
-        return new Date(newTargetTime)
-      }
+      localStorage.removeItem('countdown_target')
+      localStorage.removeItem('countdown_start')
     }
-    
-    // Default: January 10th of next year at 00:00:00
+
+    // Always create fresh date for January 10th
     const now = new Date()
     const currentYear = now.getFullYear()
     const currentMonth = now.getMonth()
+    const currentDay = now.getDate()
     
-    // If we're past January 10th this year, set for next year
+    // Determine which year's January 10th to use
     let targetYear = currentYear
-    if (currentMonth > 0 || (currentMonth === 0 && now.getDate() > 10)) {
+    
+    // If current date is AFTER January 10th of this year, use next year
+    // January is month 0, so check if we're past January 10th
+    if (currentMonth > 0 || (currentMonth === 0 && currentDay > 10)) {
       targetYear = currentYear + 1
     }
     
-    return new Date(targetYear, 0, 10, 0, 0, 0, 0) // January 10th
+    // Create target date: January 10th, [targetYear] at 00:00:00
+    const january10th = new Date(targetYear, 0, 10, 0, 0, 0, 0)
+    
+    // Debug log to check the date
+    console.log('Target Date Set To:', january10th.toISOString())
+    console.log('Current Date:', now.toISOString())
+    
+    return january10th
   })
 
   // Save the target date on component mount
@@ -101,6 +99,8 @@ export function LandingPage() {
     if (typeof window !== 'undefined') {
       localStorage.setItem('countdown_target', targetDate.getTime().toString())
       localStorage.setItem('countdown_start', new Date().getTime().toString())
+      console.log('Target Date Saved:', targetDate)
+      console.log('Current Time Saved:', new Date().getTime())
     }
   }, [targetDate])
 
@@ -148,6 +148,9 @@ export function LandingPage() {
             <CountdownTimer targetDate={targetDate} />
             <p className="text-xs text-muted-foreground mt-2">
               Launching on: {formatDate(targetDate)}
+            </p>
+            <p className="text-xs text-muted-foreground opacity-70 mt-1">
+              (Currently: {new Date().toLocaleDateString()})
             </p>
           </div>
 
